@@ -1,2 +1,3 @@
 Fruit ninja maket --
-simple mobile game
+simple mobile game --
+stage #3
