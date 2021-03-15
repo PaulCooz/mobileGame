@@ -1,0 +1,28 @@
+local timeToSpawn = 0
+local quantity = 1
+
+local produced = 0
+local function getNext()													-- Complicate
+	produced = produced + 1
+	local k = math.min(produced / 10, 1)
+
+	return 4 - k, randReal(2 + k, 4 + k)
+end
+
+function update(self, dt)
+	timeToSpawn = timeToSpawn - dt
+	if timeToSpawn <= 0 then
+		if quantity > 0 then												-- output set
+			timeToSpawn = randReal(0.2, 0.5)
+			quantity = quantity - 1
+
+			local width, height = window.get_size()
+			local maxSriteSize = 900
+			local scale = 0.2 * math.min(width, height) / maxSriteSize		-- 20% in window
+
+			factory.create("#pushFruit", vmath.vector3(), nil, {}, scale)
+		else																-- wait new set
+			timeToSpawn, quantity = getNext()
+		end
+	end
+end

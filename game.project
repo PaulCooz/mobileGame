@@ -1,0 +1,14 @@
+[project]
+title = Mobile game
+
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[input]
+use_accelerometer = 0
+
+[display]
+width = 1136
+height = 640
+dynamic_orientation = 1
+

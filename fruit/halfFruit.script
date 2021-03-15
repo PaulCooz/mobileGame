@@ -1,0 +1,45 @@
+go.property("nameFruit", hash("banana0"))
+go.property("time", 0)
+go.property("speed", 0)
+go.property("v", vmath.vector3(0, 0, 0))
+
+function init(self)
+	--																		-- Object selection
+	local typesOfFruit = {
+		[hash("banana0")] = "half_banana0",
+		[hash("orange0")] = "half_orange0",
+		[hash("banana1")] = "half_banana1",
+		[hash("orange1")] = "half_orange1"
+	}
+
+	local sprite = {id = hash(typesOfFruit[self.nameFruit])}				-- set sprite
+	msg.post("#sprite", "play_animation", sprite)
+
+	local width, height = window.get_size()
+	local maxSpriteSize = 900
+	local scale = 0.2 * math.min(width, height) / maxSpriteSize				-- 20% in window
+
+	local k = 1 + randReal(0, 0.1)											-- scale +0..10% 
+	go.set_scale(scale * k)
+end
+
+function update(self, dt)
+	local nextPos = go.get_position()
+
+	local move = self.v + gravity * self.time
+	nextPos = nextPos + move * self.speed * dt
+
+	if nextPos.y < -110 then												-- remove
+		go.delete()
+	end
+
+	self.time = self.time + dt * self.speed
+
+	local nextAngle = go.get(go.get_id(), "euler.z") + 0.5 * self.speed		-- rotate
+	go.set(go.get_id(), "euler.z", nextAngle)
+
+	local nextScale = go.get_scale() * (1 + self.speed / 10000)				-- rescale
+	go.set_scale(nextScale)
+
+	go.set_position(nextPos)												-- move
+end

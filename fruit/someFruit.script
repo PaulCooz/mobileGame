@@ -1,0 +1,137 @@
+width, height = window.get_size()
+gravity = vmath.vector3(0, -100, 0)
+
+local function maxH(y0) 
+	return -(y0 * y0) / (2 * gravity.y)
+end
+
+local function length(v)
+	return -2 * v.x * v.y / gravity.y
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	--																		-- Object selection
+	local objects = {
+		"banana", "orange"
+	}
+	local iObj = math.random(#objects)
+	
+	local sprite = {id = hash(objects[iObj])}								-- set sprite
+	msg.post("#sprite", "play_animation", sprite)
+	
+	self.nameFruit = hash(objects[iObj])
+	--																		-- Set an object
+	local k = 1 + randReal(0, 0.1)
+	go.set_scale(go.get_scale() * k)										-- scale +0..10%
+
+	local startY = -100
+	local y0 = math.sqrt(-2 * gravity.y * height) * randReal(0.5, 0.7)		-- max height(50-70%)
+	self.v = vmath.vector3(0, y0 - startY, 0)
+
+	local startX
+	if randPercents(30) then												-- throw side(30%)
+		startX = randReal(-width / 3, 0)
+		self.v.x = -gravity.y * width / (2 * self.v.y) * randReal(1.3, 1.6)
+		self.speed = 2
+	else																	-- bottom(70%)
+		startX = randReal(0, width / 3)
+		self.v.x = -gravity.y * width / (2 * self.v.y) * randReal(0.2, 0.4)
+		self.speed = 3
+	end
+
+	self.time = 0															-- timer
+
+	go.set_position(vmath.vector3(startX, startY, 0))
+end
+
+function update(self, dt)
+	local nextPos = go.get_position()
+
+	local move = self.v + gravity * self.time
+	nextPos = nextPos + move * self.speed * dt
+	
+	if nextPos.y < -110 then												-- remove
+		go.delete()
+	end
+
+	self.time = self.time + dt * self.speed
+
+	local nextAngle = go.get(go.get_id(), "euler.z") + 0.5 * self.speed		-- rotate
+	go.set(go.get_id(), "euler.z", nextAngle)
+
+	local nextScale = go.get_scale() * (1 + self.speed / 10000)				-- rescale
+	go.set_scale(nextScale)
+	
+	go.set_position(nextPos)												-- move
+end
+
+local function dist(a, b)													-- manhattan distance
+	return math.abs(a.x - b.x) + math.abs(a.y - b.y)
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("cut") then
+		local pos = go.get_position()
+		local movePos = (pos - message.pos) * self.speed
+		local stringName = string.sub(
+			tostring(self.nameFruit),
+			8,
+			#tostring(self.nameFruit) - 1
+		)
+
+		local half0 = hash(stringName .. "0")
+		local half1 = hash(stringName .. "1")
+
+		factory.create(
+			"factory#pushHalves", 
+			vmath.vector3(pos.x * randReal(0.9, 1.1), pos.y * randReal(0.9, 1.1), 0),
+			nil, 
+			{ 
+				v = (self.v + movePos) * randReal(0.8, 1.2),
+				time = self.time,
+				nameFruit = half0,
+				speed = self.speed
+			}, 
+			go.get_scale()
+		)
+		
+		factory.create(
+			"factory#pushHalves",
+			vmath.vector3(pos.x * randReal(0.9, 1.1), pos.y * randReal(0.9, 1.1), 0),
+			nil, 
+			{ 
+				v = (self.v + movePos) * randReal(0.8, 1.2),
+				time = self.time,
+				nameFruit = half1,
+				speed = self.speed
+			}, 
+			go.get_scale()
+		)
+	end
+end
+
+local predCursorPos = vmath.vector3()
+local predTime
+function on_input(self, action_id, action)
+	if action_id == hash("touch") then
+		local cursorPos = vmath.vector3(action.x, action.y, 0)
+
+		if action.pressed then
+			predCursorPos = cursorPos
+			predTime = os.clock()
+		else
+			if dist(go.get_position(), cursorPos) < 100 then
+				local cursorSpeed = dist(predCursorPos, cursorPos) / (os.clock() - predTime)
+				if cursorSpeed > 500 then
+					go.delete()
+					msg.post(msg.url(), hash("cut"), { pos = cursorPos })
+				end
+			end
+			if os.clock() - predTime >= 0.1 then 
+				predCursorPos = cursorPos
+				predTime = os.clock()
+			end
+		end
+	end
+end
