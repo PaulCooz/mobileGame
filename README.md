@@ -1,1 +1,2 @@
--- Fruit ninja maket --
+Fruit ninja maket --
+simple mobile game
