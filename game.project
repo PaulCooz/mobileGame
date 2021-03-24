@@ -3,6 +3,7 @@ title = Mobile game
 
 [bootstrap]
 main_collection = /main/main.collectionc
+render = /interfaces/new.renderc
 
 [input]
 use_accelerometer = 0
@@ -11,4 +12,5 @@ use_accelerometer = 0
 width = 1136
 height = 640
 dynamic_orientation = 1
+vsync = 1
 

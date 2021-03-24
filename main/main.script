@@ -1,4 +1,14 @@
-function randReal(from, to) 
+gravity = vmath.vector3(0, -100, 0)
+width, height = window.get_size()
+currentScore = 0
+currentHearts = 5
+isGameOver = true
+
+local timeToSpawn
+local quantity
+local produced
+
+function randReal(from, to)
 	return from + (to - from) * math.random()
 end
 
@@ -12,8 +22,50 @@ end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
+	msg.post("#mainWindow", "disable")
 
 	-- math.randomseed(os.time())
+end
+
+local function getNext()													-- Complicate
+	produced = produced + 1
+	local k = math.min(produced / 10, 1)
+
+	return 4 - k, randReal(2 + k, 4 + k)
+end
+
+function update(self, dt)
+	if  isGameOver == false then
+		timeToSpawn = timeToSpawn - dt
+		if timeToSpawn <= 0 then
+			if quantity > 0 then												-- output set
+				timeToSpawn = randReal(0.2, 0.5)
+				quantity = quantity - 1
+
+				local width, height = window.get_size()
+				local maxSriteSize = 900
+				local scale = 0.2 * math.min(width, height) / maxSriteSize		-- 20% in window
+
+				factory.create("#pushFruit", vmath.vector3(), nil, {}, scale)
+			else																-- wait new set
+				timeToSpawn, quantity = getNext()
+			end
+		end
+	end
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("start") then
+		isGameOver = false
+		timeToSpawn = 3
+		quantity = 1
+		produced = 0
+		currentHearts = 3
+		currentScore = 0
+	elseif message_id == hash("gameOver") then
+		isGameOver = true
+		msg.post("mainWindow", hash("windowResult"))
+	end
 end
 
 local pos
@@ -25,11 +77,15 @@ function on_input(self, action_id, action)
 		if action.pressed then
 			pos = currentPos
 		else
-			msg.post("@render:", "draw_line", { 
-				start_point = currentPos, 
-				end_point = pos, 
-				color = vmath.vector4(1, 1, 1, 1)
-			})
+			msg.post(
+				"@render:", 
+				"draw_line", 
+				{ 
+					start_point = currentPos, 
+					end_point = pos, 
+					color = vmath.vector4(1, 1, 1, 1)
+				}
+			)
 			pos = currentPos
 		end
 	end

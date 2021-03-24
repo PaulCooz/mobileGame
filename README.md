@@ -1,3 +1,1 @@
 -- Fruit ninja maket --
-
-"# mobileGame" 

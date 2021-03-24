@@ -1,6 +1,7 @@
 go.property("nameFruit", hash("banana0"))
 go.property("time", 0)
 go.property("speed", 0)
+go.property("scale", vmath.vector3(0, 0, 0))
 go.property("v", vmath.vector3(0, 0, 0))
 
 function init(self)
@@ -15,12 +16,8 @@ function init(self)
 	local sprite = {id = hash(typesOfFruit[self.nameFruit])}				-- set sprite
 	msg.post("#sprite", "play_animation", sprite)
 
-	local width, height = window.get_size()
-	local maxSpriteSize = 900
-	local scale = 0.2 * math.min(width, height) / maxSpriteSize				-- 20% in window
-
 	local k = 1 + randReal(0, 0.1)											-- scale +0..10% 
-	go.set_scale(scale * k)
+	go.set_scale(self.scale * k)
 end
 
 function update(self, dt)
