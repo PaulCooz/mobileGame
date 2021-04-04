@@ -109,7 +109,7 @@ nodes {
   type: TYPE_BOX
   blend_mode: BLEND_MODE_ALPHA
   texture: "gui/Next"
-  id: "start"
+  id: "startButton"
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
   pivot: PIVOT_CENTER
@@ -131,7 +131,7 @@ nodes {
 }
 nodes {
   position {
-    x: 594.0
+    x: 532.0
     y: 328.0
     z: 0.0
     w: 1.0

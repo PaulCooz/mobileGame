@@ -6,14 +6,13 @@ go.property("v", vmath.vector3(0, 0, 0))
 
 function init(self)
 	--																		-- Object selection
-	local typesOfFruit = {
-		[hash("banana0")] = "half_banana0",
-		[hash("orange0")] = "half_orange0",
-		[hash("banana1")] = "half_banana1",
-		[hash("orange1")] = "half_orange1"
-	}
+	local fruit = "half_" .. string.sub(
+		tostring(self.nameFruit),
+		8,
+		#tostring(self.nameFruit) - 1
+	)
 
-	local sprite = {id = hash(typesOfFruit[self.nameFruit])}				-- set sprite
+	local sprite = {id = hash(fruit)}										-- set sprite
 	msg.post("#sprite", "play_animation", sprite)
 
 	local k = 1 + randReal(0, 0.1)											-- scale +0..10% 
@@ -21,22 +20,36 @@ function init(self)
 end
 
 function update(self, dt)
-	local nextPos = go.get_position()
+	local pos = go.get_position()
 
-	local move = self.v + gravity * self.time
-	nextPos = nextPos + move * self.speed * dt
+	local speed = self.speed * dt
+	if freeze > 0 then
+		if freeze < 1 then
+			speed = speed / (2 * math.sin(math.pi * (2 * freeze + 1) / 6))
+		else
+			speed = speed / 2
+		end
+	end
 
-	if nextPos.y < -110 then												-- remove
+	local boom = vmath.vector3(0, 0, 0)
+	if boomb ~= vmath.vector3(0, 0, 0) then
+		boom = 1000 * (pos - boomb) / (math.abs(pos.x - boomb.x) + math.abs(pos.y - boomb.y))
+	end
+
+	local move = self.v + boom + gravity * self.time
+	pos = pos + move * speed
+
+	if pos.y < -110 then													-- remove
 		go.delete()
 	end
 
-	self.time = self.time + dt * self.speed
+	self.time = self.time + speed
 
-	local nextAngle = go.get(go.get_id(), "euler.z") + 0.5 * self.speed		-- rotate
+	local nextAngle = go.get(go.get_id(), "euler.z") + 20 * speed			-- rotate
 	go.set(go.get_id(), "euler.z", nextAngle)
 
-	local nextScale = go.get_scale() * (1 + self.speed / 10000)				-- rescale
+	local nextScale = go.get_scale() * (1 + speed / 100)					-- rescale
 	go.set_scale(nextScale)
 
-	go.set_position(nextPos)												-- move
+	go.set_position(pos)												-- move
 end

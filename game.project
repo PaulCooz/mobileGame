@@ -3,7 +3,7 @@ title = Mobile game
 
 [bootstrap]
 main_collection = /main/main.collectionc
-render = /interfaces/new.renderc
+render = /builtins/render/default.renderc
 
 [input]
 use_accelerometer = 0

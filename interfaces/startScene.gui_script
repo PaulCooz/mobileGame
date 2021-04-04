@@ -1,28 +1,37 @@
+bestScore = 0
+local function load_highscore()
+	local filename = sys.get_save_file("sys_save_load", "bestScore")
+	local data = sys.load(filename)
+	return data.bestScore or 0
+end
+
 function init(self)
 	msg.post(".", "acquire_input_focus")
+
+	bestScore = load_highscore()
+	msg.post("#startScene", hash("updateScore"), { score = bestScore })
 end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash("setHome") then
 		msg.post("#startScene", "enable")
-		msg.post("#mainWindow", "disable")
+		msg.post("#kitchenScene", "disable")
+	elseif message_id == hash("updateScore") then
+		bestScore = message.score
+
+		local filename = sys.get_save_file("sys_save_load", "bestScore")
+		sys.save(filename, { bestScore = bestScore })
+		
+		local text = gui.get_node("bestScore")
+		gui.set_text(text, "best score: " .. bestScore)
 	end
 end
 
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and action.pressed then
-		local button = gui.get_node("start")
+		local button = gui.get_node("startButton")
 		if gui.pick_node(button, action.x, action.y) then
-			msg.post("#startScene", "disable")
-			
-			currentScore = 0
-			currentHearts = 3
-			isGameOver = false
-
 			msg.post("mainWindow", "start")
-			msg.post("#mainWindow", "enable")
-			msg.post("mainWindow", hash("setScore"), { int = 0 })
-			msg.post("mainWindow", hash("setHearts"), { int = 3 })
 		end
 	end
 end
