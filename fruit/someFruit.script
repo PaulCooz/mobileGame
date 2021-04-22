@@ -1,17 +1,8 @@
-local objects = {
-	"banana", "orange"
-}
-local bonuses = {
-	"frozenLime", "waterboomb"
-}
+go.property("nameFruit", hash("banana"))
 
-local function getObject()
-	if percents(40) then
-		return bonuses[math.random(#bonuses)]
-	else
-		return objects[math.random(#objects)]
-	end
-end
+local maxCombo = 5
+local combo = 0
+local predCutTime = -1
 
 local function maxH(y0)
 	return -(y0 * y0) / (2 * gravity.y)
@@ -23,17 +14,13 @@ end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
-	--																		-- Object selection
-	local fruit = getObject()
 
-	local sprite = { id = hash(fruit) }										-- set sprite
+	local sprite = { id = self.nameFruit }									-- set sprite
 	msg.post("#sprite", "play_animation", sprite)
 
 	go.set(go.get_id(), "euler.z", randReal(0, 360))
-
-	self.nameFruit = hash(fruit)
 	--																		-- Set an object
-	local k = 1 + randReal(0, 0.1)
+	local k = 1.2 + randReal(0.0, 0.1)
 	go.set_scale(go.get_scale() * k)										-- scale +0..10%
 
 	local startY = -100
@@ -57,17 +44,23 @@ function init(self)
 	self.time = 0															-- timer
 	self.popTime = 0
 
+	if self.nameFruit == hash("heart") then
+		go.set_scale(go.get_scale() * 5)
+		self.speed = self.speed * 1.5
+	end
+
 	go.set_position(vmath.vector3(startX, startY, 0))
 end
 
-local function sqr(a) 
-	return a * a
-end
-
 function update(self, dt)
+	if (os.clock() - predCutTime) > 0.4 then
+		factory.create("mainWindow#setText", pos, nil, { numCombo = combo })
+		combo = 0
+	end
+
 	local pos = go.get_position()
 
-	if isGameOver then
+	if isGameOver and self.nameFruit ~= hash("waterboomb") then
 		if boomb == vmath.vector3(0, 0, 0) then
 			msg.post(msg.url(), hash("cut"), { pos = pos - gravity})
 		else
@@ -93,13 +86,12 @@ function update(self, dt)
 	local move = self.v + boom + gravity * self.time
 	pos = pos + move * speed
 
-	if pos.y < -110 then											-- remove
-		if self.nameFruit ~= hash("waterboomb") and isGameOver == false then
-			currentHearts = currentHearts - 1
-			msg.post("mainWindow", hash("setHearts"), { int = currentHearts })
+	if pos.y < -110 then													-- remove
+		if self.nameFruit ~= hash("waterboomb") and self.nameFruit ~= hash("heart") then
+			msg.post("mainWindow", hash("removeHeart"))
 		end
 
-		if currentHearts <= 0 then
+		if currentHearts == 0 then
 			msg.post("mainWindow", hash("gameOver"))
 		end
 
@@ -109,12 +101,24 @@ function update(self, dt)
 	self.time = self.time + speed
 
 	if self.popTime ~= 0 then
-		local alpha = (self.time - self.popTime) / 4
+		if self.nameFruit == hash("heart") then
+			local backH = vmath.vector3(0, 500, quantityOfHearts / 10)
+			backH.x = width - 0.05 * width * (quantityOfHearts - 1) - 100
+			
+			go.set(go.get_id(), "euler.z", 0)
+			go.set_position((pos + backH) / 2)
 
-		if alpha < 1 then
-			go.set("#sprite", "tint", vmath.vector4(1, 1, 1, 1 - alpha))
+			if vmath.length(pos - backH) < width * 0.05 then 
+				go.delete()
+			end
 		else
-			go.delete()
+			local alpha = (self.time - self.popTime) / 4
+
+			if alpha < 1 then
+				go.set("#sprite", "tint", vmath.vector4(1, 1, 1, 1 - alpha))
+			else
+				go.delete()
+			end
 		end
 
 		return nil
@@ -131,18 +135,18 @@ end
 
 function on_message(self, message_id, message)
 	if message_id == hash("cut") then
-		local fruit = string.sub(
-			tostring(self.nameFruit),
-			8,
-			#tostring(self.nameFruit) - 1
-		)
 		local pos = go.get_position()
 
-		if fruit == "waterboomb" then
+		if self.nameFruit == hash("waterboomb") then
 			boomb = message.pos
 			boombTime = 4.0
+			
+			msg.post("#sprite", "play_animation", { id = hash("boom") })
+			go.set_scale(go.get_scale() * 20)
 
 			msg.post("mainWindow", hash("gameOver"))
+		elseif self.nameFruit == hash("heart") then
+			msg.post("mainWindow", hash("addHeart"))
 		else
 			currentScore = currentScore + 1									-- update score
 			msg.post("mainWindow", hash("setScore"), { int = currentScore })
@@ -153,21 +157,23 @@ function on_message(self, message_id, message)
 																			-- add halves
 			local movePos = (pos - message.pos) * self.speed * 0.5
 
-			if fruit == "frozenLime" then
+			if self.nameFruit == hash("frozenLime") then
 				freeze = 4.0
 			end
 
-			local half0 = hash(fruit .. "0")
-			local half1 = hash(fruit .. "1")
-
+			local fruit = string.sub(
+				tostring(self.nameFruit),
+				8,
+				#tostring(self.nameFruit) - 1
+			)
 			factory.create(
 				"mainWindow#pushHalves", 
-				vmath.vector3(pos.x * randReal(0.9, 1.1), pos.y * randReal(0.9, 1.1), 0),
+				vmath.vector3(pos.x * randReal(0.9, 1.1), pos.y * randReal(0.9, 1.1), math.random()),
 				nil,
 				{ 
 					v = self.v * randReal(0.9, 1.1) + movePos,
 					time = self.time,
-					nameFruit = half0,
+					nameFruit = hash("half_" .. fruit .. "0"),
 					speed = self.speed * 1.5,
 					scale = go.get_scale()
 				}, 
@@ -176,21 +182,21 @@ function on_message(self, message_id, message)
 
 			factory.create(
 				"mainWindow#pushHalves",
-				vmath.vector3(pos.x * randReal(0.9, 1.1), pos.y * randReal(0.9, 1.1), 0),
+				vmath.vector3(pos.x * randReal(0.9, 1.1), pos.y * randReal(0.9, 1.1), math.random()),
 				nil, 
 				{
 					v = self.v * randReal(0.9, 1.1) + movePos,
 					time = self.time,
-					nameFruit = half1,
+					nameFruit = hash("half_" .. fruit .. "1"),
 					speed = self.speed * 1.5,
 					scale = go.get_scale()
 				},
 				go.get_scale()
 			)
 
-			msg.post("#sprite", "play_animation", { id = hash("pop" .. math.random(0, 2)) })-- clyaksa
+			msg.post("#sprite", "play_animation", {id=hash("pop"..math.random(0,2))})-- clyaksa
 			go.set_scale(go.get_scale() * 2.5)
-			go.set_position(vmath.vector3(pos.x, pos.y, 1 / sqr(pos.x + pos.y)))
+			go.set_position(vmath.vector3(pos.x, pos.y, math.random()))
 		end
 	end
 end
@@ -212,7 +218,11 @@ function on_input(self, action_id, action)
 			if dist(go.get_position(), cursorPos) < 100 then
 				local cursorSpeed = dist(predCursorPos, cursorPos) / (os.clock() - predTime)
 				if cursorSpeed > 500 then
+					combo = combo + 1
+					predCutTime = os.clock()
+					
 					msg.post(msg.url(), hash("cut"), { pos = cursorPos })
+
 					self.popTime = self.time
 				end
 			end

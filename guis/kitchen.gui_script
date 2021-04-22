@@ -1,0 +1,54 @@
+function init(self)
+	msg.post(".", "acquire_input_focus")
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("setScore") then
+		gui.set_text(gui.get_node("score"), message.int)
+
+	elseif message_id == hash("setHearts") then
+		gui.set_text(gui.get_node("HP"), math.max(0, message.int))
+
+	elseif message_id == hash("windowResult") then
+		local box = gui.get_node("windowResult")
+		gui.animate(box, "position.y", 300, gui.EASING_OUTSINE, 0.5, 0.5)
+	end
+end
+
+local function onDone(self, node)
+	msg.post("#startScene", "setStart")
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") then
+		local box = gui.get_node("windowResult")
+		local rest = gui.get_node("restart")
+		local standartScale = vmath.vector3(0.5, 0.5, 1)
+
+		if gui.pick_node(rest, action.x, action.y) then
+			if action.released then
+				gui.animate(box, "position.y", 1000, gui.EASING_OUTSINE, 0.5)
+				msg.post("mainWindow", hash("start"))
+			end
+
+			gui.animate(rest, gui.PROP_COLOR, vmath.vector4(0.7, 0.7, 0.7, 1), gui.EASING_INOUTQUAD, 0.1)
+			gui.animate(rest, gui.PROP_SCALE, 0.8 * standartScale, gui.EASING_INOUTQUAD, 0.1)
+		else
+			gui.animate(rest, gui.PROP_COLOR, vmath.vector4(1, 1, 1, 1), gui.EASING_INOUTQUAD, 0.1)
+			gui.animate(rest, gui.PROP_SCALE, standartScale, gui.EASING_INOUTQUAD, 0.1)
+		end
+
+		local home = gui.get_node("home")
+		if gui.pick_node(home, action.x, action.y) then
+			if action.released then
+				gui.animate(box, "position.y", 1000, gui.EASING_OUTSINE, 0.5, 0.0, onDone)
+			end
+
+			gui.animate(home, gui.PROP_COLOR, vmath.vector4(0.7, 0.7, 0.7, 1), gui.EASING_INOUTQUAD, 0.1)
+			gui.animate(home, gui.PROP_SCALE, 0.8 * standartScale, gui.EASING_INOUTQUAD, 0.1)
+		else
+			gui.animate(home, gui.PROP_COLOR, vmath.vector4(1, 1, 1, 1), gui.EASING_INOUTQUAD, 0.1)
+			gui.animate(home, gui.PROP_SCALE, standartScale, gui.EASING_INOUTQUAD, 0.1)
+		end
+	end
+end

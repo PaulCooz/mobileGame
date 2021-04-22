@@ -1,12 +1,15 @@
 gravity = vmath.vector3(0, -100, 0)
 width, height = window.get_size()
 
-isGameOver = true
 bestScore = 0
+isGameOver = true
+quantityOfHearts = 0
+maxHeart = 5
+lastHeartX = 1000
 
-local timeToSpawn
-local quantity
-local produced
+function sqr(a)
+	return a * a
+end
 
 function randReal(from, to)
 	return from + (to - from) * math.random()
@@ -22,11 +25,14 @@ end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
+	
 	msg.post("#kitchenScene", "disable")
+	self.hearts = {}
 
 	math.randomseed(os.time())
 end
 
+local produced
 local function getNext()													-- Complicate
 	produced = produced + 1
 	local k = math.min(produced / 10, 1)
@@ -34,6 +40,26 @@ local function getNext()													-- Complicate
 	return 4 - k, randReal(2 + k, 4 + k)
 end
 
+local quantity
+local quantityOfBombs = 0
+local commonFruit = {
+	"banana", "orange"
+}
+
+local function getAnObject()
+	if percents(30) and quantityOfBombs < quantity / 2 then
+		quantityOfBombs = quantityOfBombs + 1
+		return hash("waterboomb")
+	elseif percents(10) and quantityOfHearts < maxHeart then
+		return hash("heart")
+	elseif percents(10) then
+		return hash("frozenLime")
+	else
+		return hash(commonFruit[math.random(#commonFruit)])
+	end
+end
+
+local timeToSpawn
 function update(self, dt)
 	if  isGameOver == true then
 		return nil
@@ -41,15 +67,23 @@ function update(self, dt)
 	
 	timeToSpawn = timeToSpawn - dt
 	if timeToSpawn <= 0 then
-		if quantity > 0 then											-- output set
-			timeToSpawn = randReal(0.2, 0.5)
+		if quantity > 0 then												-- output set
+			timeToSpawn = randReal(0.1, 0.3)
 			quantity = quantity - 1
 			local width, height = window.get_size()
 			local maxSriteSize = 900
-			local scale = 0.2 * math.min(width, height) / maxSriteSize	-- 20% in window
-			factory.create("mainWindow#pushFruit", vmath.vector3(), nil, {}, scale)
-		else															-- wait new set
+			local scale = 0.2 * math.min(width, height) / maxSriteSize		-- 20% in window
+			
+			factory.create(
+				"mainWindow#pushFruit", 
+				vmath.vector3(),
+				nil, 
+				{ nameFruit = getAnObject() }, 
+				scale
+			)
+		else																-- wait new set
 			timeToSpawn, quantity = getNext()
+			quantityOfBombs = 0
 		end
 	end
 
@@ -65,26 +99,53 @@ end
 
 function on_message(self, message_id, message)
 	if message_id == hash("start") then
-		isGameOver = false
-		
 		timeToSpawn = 3
 		quantity = 1
 		produced = 0
 
-		currentHearts = 3
+		for i = 0, 2 do
+			msg.post("mainWindow", hash("addHeart"))
+		end
+
 		currentScore = 0
+		msg.post("mainWindow", hash("setScore"), { int = currentScore })
 
 		boomb = vmath.vector3(0, 0, 0)
 		boombTime = 0
 		freeze = 0
 
-		msg.post("mainWindow#startScene", "disable")
-		msg.post("mainWindow#kitchenScene", "enable")
-		msg.post("mainWindow", hash("setScore"), { int = currentScore })
-		msg.post("mainWindow", hash("setHearts"), { int = currentHearts })
+		isGameOver = false
 	elseif message_id == hash("gameOver") then
+		while quantityOfHearts > 0 do
+			go.delete(self.hearts[quantityOfHearts])
+			self.hearts[quantityOfHearts] = nil
+
+			quantityOfHearts = quantityOfHearts - 1
+		end
+		
 		isGameOver = true
 		msg.post("mainWindow", hash("windowResult"))
+	elseif message_id == hash("removeHeart") then
+		go.delete(self.hearts[quantityOfHearts])
+		self.hearts[quantityOfHearts] = nil
+
+		quantityOfHearts = quantityOfHearts - 1
+		if quantityOfHearts <= 0 then
+			msg.post("mainWindow", hash("gameOver"))
+		end
+	elseif message_id == hash("addHeart") then
+		if quantityOfHearts == maxHeart then
+			return nil
+		end
+
+		local pos = vmath.vector3(
+			width - 0.05 * width * quantityOfHearts - 100, 
+			500, 
+			quantityOfHearts / 10
+		)
+
+		quantityOfHearts = quantityOfHearts + 1
+		self.hearts[quantityOfHearts] = factory.create("mainWindow#hearts", pos)
 	end
 end
 

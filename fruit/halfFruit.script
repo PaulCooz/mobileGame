@@ -1,4 +1,4 @@
-go.property("nameFruit", hash("banana0"))
+go.property("nameFruit", hash("half_banana0"))
 go.property("time", 0)
 go.property("speed", 0)
 go.property("scale", vmath.vector3(0, 0, 0))
@@ -6,13 +6,8 @@ go.property("v", vmath.vector3(0, 0, 0))
 
 function init(self)
 	--																		-- Object selection
-	local fruit = "half_" .. string.sub(
-		tostring(self.nameFruit),
-		8,
-		#tostring(self.nameFruit) - 1
-	)
 
-	local sprite = {id = hash(fruit)}										-- set sprite
+	local sprite = {id = self.nameFruit }									-- set sprite
 	msg.post("#sprite", "play_animation", sprite)
 
 	local k = 1 + randReal(0, 0.1)											-- scale +0..10% 
@@ -33,7 +28,7 @@ function update(self, dt)
 
 	local boom = vmath.vector3(0, 0, 0)
 	if boomb ~= vmath.vector3(0, 0, 0) then
-		boom = 1000 * (pos - boomb) / (math.abs(pos.x - boomb.x) + math.abs(pos.y - boomb.y))
+		boom = (pos - boomb) / (sqr(pos.x - boomb.x) + sqr(pos.y - boomb.y))
 	end
 
 	local move = self.v + boom + gravity * self.time
@@ -51,5 +46,5 @@ function update(self, dt)
 	local nextScale = go.get_scale() * (1 + speed / 100)					-- rescale
 	go.set_scale(nextScale)
 
-	go.set_position(pos)												-- move
+	go.set_position(pos)													-- move
 end

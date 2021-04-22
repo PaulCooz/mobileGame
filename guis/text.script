@@ -1,0 +1,27 @@
+go.property("numCombo", 0)
+
+function init(self)
+	if self.numCombo < 3 then 
+		go.delete()
+	else
+		label.set_text("#label", "COMBO " .. self.numCombo)
+		go.set(go.get_id(), "euler.z", 0)
+		go.set_scale(0.5)
+
+		self.time = 0
+	end
+end
+
+function update(self, dt)
+	if self.time >= 3 then
+		go.delete()
+	else
+		local color = vmath.vector4(1, 1, 1, 1 - (self.time - 1) / 2)
+		if self.time < 1 then 
+			color.w = 1
+		end
+		
+		go.set("#label", "color", color)
+	end
+	self.time = self.time + dt
+end
