@@ -1,12 +1,13 @@
 go.property("numCombo", 0)
 
 function init(self)
-	if self.numCombo < 3 then 
+	if self.numCombo < 3 then
 		go.delete()
 	else
-		label.set_text("#label", "COMBO " .. self.numCombo)
+		currentScore = currentScore + self.numCombo
+		label.set_text("#label", "COMBO +" .. self.numCombo)
 		go.set(go.get_id(), "euler.z", 0)
-		go.set_scale(0.5)
+		go.set_scale(0.3)
 
 		self.time = 0
 	end

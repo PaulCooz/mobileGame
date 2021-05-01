@@ -1,37 +1,24 @@
 go.property("nameFruit", hash("half_banana0"))
 go.property("time", 0)
 go.property("speed", 0)
-go.property("scale", vmath.vector3(0, 0, 0))
 go.property("v", vmath.vector3(0, 0, 0))
 
 function init(self)
-	--																		-- Object selection
-
-	local sprite = {id = self.nameFruit }									-- set sprite
-	msg.post("#sprite", "play_animation", sprite)
-
-	local k = 1 + randReal(0, 0.1)											-- scale +0..10% 
-	go.set_scale(self.scale * k)
+	msg.post("#sprite", "play_animation", { id = self.nameFruit })
 end
 
 function update(self, dt)
 	local pos = go.get_position()
 
 	local speed = self.speed * dt
-	if freeze > 0 then
-		if freeze < 1 then
-			speed = speed / (2 * math.sin(math.pi * (2 * freeze + 1) / 6))
-		else
-			speed = speed / 2
-		end
+	if freeze > 0 then														-- speed - 33%
+		speed = speed * math.max(1 / 3, - 2 * freeze / 3 + 1)
 	end
 
-	local boom = vmath.vector3(0, 0, 0)
-	if boomb ~= vmath.vector3(0, 0, 0) then
-		boom = (pos - boomb) / (sqr(pos.x - boomb.x) + sqr(pos.y - boomb.y))
+	local move = self.v + gravity * self.time
+	if boomb ~= nil then
+		-- move = move + (pos - boomb) / (math.abs(pos.x - boomb.x) + math.abs(pos.y - boomb.y))
 	end
-
-	local move = self.v + boom + gravity * self.time
 	pos = pos + move * speed
 
 	if pos.y < -110 then													-- remove
