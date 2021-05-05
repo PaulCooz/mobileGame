@@ -3,7 +3,7 @@ title = Mobile game
 
 [bootstrap]
 main_collection = /main/main.collectionc
-render = /builtins/render/default.renderc
+render = /guis/rend.renderc
 
 [input]
 use_accelerometer = 0
@@ -13,4 +13,10 @@ width = 1136
 height = 640
 dynamic_orientation = 1
 vsync = 1
+
+[gui]
+max_particlefx_count = 1024
+
+[particle_fx]
+max_count = 1024
 

@@ -1,14 +1,17 @@
 local isEnable																-- is showing this scene
 
+local function getBestScore()
+	return sys.load(sys.get_save_file("sys_save_load", "bestScore")).bestScore or 0
+end
+
 function init(self)
 	msg.post(".", "acquire_input_focus")
-
 	
 	isEnable = true
 
 	gui.set_text(															-- set best score on scene
 		gui.get_node("bestScore"), 
-		"best score:" .. sys.load(sys.get_save_file("sys_save_load", "bestScore")).bestScore
+		"best score:" .. getBestScore()
 	)
 end
 
@@ -26,7 +29,7 @@ function on_message(self, message_id, message, sender)
 
 		gui.set_text(														-- update best score
 			gui.get_node("bestScore"), 
-			"best score:" .. sys.load(sys.get_save_file("sys_save_load", "bestScore")).bestScore
+			"best score:" .. getBestScore()
 		)
 
 		local n0 = gui.get_node("bestScore")								-- fade in text and buttons

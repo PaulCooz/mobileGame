@@ -35,7 +35,7 @@ images {
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
-  image: "/assets/fruit/waterboomb.png"
+  image: "/assets/fruit/waterbomb.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
@@ -78,127 +78,67 @@ animations {
 animations {
   id: "boom"
   images {
-    image: "/assets/fruit/imgs_explode/img_0.png"
+    image: "/assets/effects/imgs_explode/img_00.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_1.png"
+    image: "/assets/effects/imgs_explode/img_01.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_10.png"
+    image: "/assets/effects/imgs_explode/img_02.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_11.png"
+    image: "/assets/effects/imgs_explode/img_03.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_12.png"
+    image: "/assets/effects/imgs_explode/img_04.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_13.png"
+    image: "/assets/effects/imgs_explode/img_05.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_14.png"
+    image: "/assets/effects/imgs_explode/img_06.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_15.png"
+    image: "/assets/effects/imgs_explode/img_07.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_16.png"
+    image: "/assets/effects/imgs_explode/img_08.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_17.png"
+    image: "/assets/effects/imgs_explode/img_09.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_18.png"
+    image: "/assets/effects/imgs_explode/img_10.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_19.png"
+    image: "/assets/effects/imgs_explode/img_11.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_2.png"
+    image: "/assets/effects/imgs_explode/img_12.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_20.png"
+    image: "/assets/effects/imgs_explode/img_13.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
   images {
-    image: "/assets/fruit/imgs_explode/img_21.png"
+    image: "/assets/effects/imgs_explode/img_14.png"
     sprite_trim_mode: SPRITE_TRIM_MODE_OFF
   }
-  images {
-    image: "/assets/fruit/imgs_explode/img_22.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_23.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_24.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_25.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_26.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_27.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_28.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_29.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_3.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_4.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_5.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_6.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_7.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_8.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  images {
-    image: "/assets/fruit/imgs_explode/img_9.png"
-    sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-  }
-  playback: PLAYBACK_LOOP_FORWARD
-  fps: 30
+  playback: PLAYBACK_ONCE_FORWARD
+  fps: 15
   flip_horizontal: 0
   flip_vertical: 0
 }

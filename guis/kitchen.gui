@@ -1,7 +1,7 @@
 script: "/guis/kitchen.gui_script"
 fonts {
   name: "mainFont"
-  font: "/guis/scoreFont.font"
+  font: "/assets/gui/scoreFont.font"
 }
 textures {
   name: "gui"

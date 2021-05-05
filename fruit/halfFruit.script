@@ -16,9 +16,14 @@ function update(self, dt)
 	end
 
 	local move = self.v + gravity * self.time
-	if boomb ~= nil then
-		-- move = move + (pos - boomb) / (math.abs(pos.x - boomb.x) + math.abs(pos.y - boomb.y))
+	if bombTime > 0.1 then
+		local b = (pos - bomb) / (sqr(pos.x - bomb.x) + sqr(pos.y - bomb.y))
+		b.z = 0
+		b = (vmath.length(self.v) / vmath.length(b)) * b
+
+		move = move + b
 	end
+	
 	pos = pos + move * speed
 
 	if pos.y < -110 then													-- remove

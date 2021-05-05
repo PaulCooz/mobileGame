@@ -1,0 +1,38 @@
+lastHeart = vmath.vector3(startWidth * 0.95, startHeight * 0.9, 0)
+hearts = {}
+quantityOfHearts = 0
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("push") then
+		if quantityOfHearts >= maxHeart then
+			return nil
+		end
+
+		lastHeart.x = lastHeart.x - startWidth / 20
+		lastHeart.z =  quantityOfHearts / (quantityOfHearts + 1)
+
+		quantityOfHearts = quantityOfHearts + 1
+		hearts[quantityOfHearts] = factory.create("mainWindow#pushHeart", lastHeart)
+
+		if message.scl == nil then
+			go.set_scale(0.01, hearts[quantityOfHearts])
+		else
+			go.set_scale(message.scl, hearts[quantityOfHearts])
+		end
+		go.animate(
+			hearts[quantityOfHearts], "scale",
+			go.PLAYBACK_ONCE_FORWARD, 1, go.EASING_LINEAR, 0.5
+		)
+	elseif message_id == hash("pop") then
+		go.animate(
+			hearts[quantityOfHearts], "scale",
+			go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_LINEAR, 0.5
+		)
+
+		lastHeart.x = lastHeart.x + startWidth / 20
+		quantityOfHearts = quantityOfHearts - 1
+		if quantityOfHearts <= 0 then
+			msg.post("mainWindow", hash("gameOver"))
+		end
+	end
+end

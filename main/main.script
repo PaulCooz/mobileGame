@@ -1,13 +1,18 @@
 gravity = vmath.vector3(0, -100, 0)
 width, height = window.get_size()
+startWidth, startHeight = window.get_size()
 null = vmath.vector3(0, 0, 0)
 
 bestScore = 0
 gameOver = true
+
 quantityOfHearts = 0
 maxHeart = 5
-lastHeartX = 1000
-heartY = height * 0.9
+local isPushHeart
+
+local function getBestScore()
+	return sys.load(sys.get_save_file("sys_save_load", "bestScore")).bestScore or 0
+end
 
 function sqr(a)
 	return a * a
@@ -26,8 +31,6 @@ function percents(percent)
 end
 
 function init(self)
-	msg.post(".", "acquire_input_focus")
-
 	msg.post("#kitchenScene", "hide")
 	self.hearts = {}
 
@@ -49,25 +52,24 @@ local commonFruit = {
 }
 
 local function getAnObject()
-	if percents(20) and quantityOfBombs < quantity / 2 then
+	if percents(40) and quantityOfBombs < quantity / 2 then
 		quantityOfBombs = quantityOfBombs + 1
-		return hash("waterboomb")
-	elseif percents(10) and quantityOfHearts < maxHeart then
+		return hash("waterbomb")
+	elseif percents(20) and quantityOfHearts < maxHeart and not isPushHeart then
+		isPushHeart = true
 		return hash("heart")
-	elseif percents(10) then
+	elseif percents(20) then
 		return hash("frozenLime")
 	else
 		return hash(commonFruit[math.random(#commonFruit)])
 	end
 end
 
-timeToSpawn = 0
 function update(self, dt)
 	if gameOver then
 		return nil
 	end 
 
-	timeToSpawn = timeToSpawn - dt
 	if timeToSpawn <= 0 then
 		if quantity > 0 then												-- output set
 			timeToSpawn = randReal(0.1, 0.3)
@@ -78,102 +80,63 @@ function update(self, dt)
 			local scale = 0.15 * math.min(width, height) / maxSriteSize		-- 15% in window
 
 			factory.create(
-				"mainWindow#pushFruit", 
+				"mainWindow#pushFruit",
 				vmath.vector3(),
-				nil, 
+				nil,
 				{ nameFruit = getAnObject() }, 
 				scale
 			)
 		else																-- wait new set
 			timeToSpawn, quantity = getNext()
 			quantityOfBombs = 0
+			isPushHeart = false
 		end
 	end
+	
 
 	if freeze > 0 then
 		freeze = freeze - dt
+		timeToSpawn = timeToSpawn - 2 * dt / 3								-- time - 33%
+	else
+		timeToSpawn = timeToSpawn - dt
 	end
 	if bombTime > 0 then 
-		bombTime = bombTime - dt
-	else 
-		bomb = nil
+		bombTime = bombTime - dt 
+	end
+	if bombTime <= 0 then
+		bomb = null
+		bombTime = 0
 	end
 end
 
 function on_message(self, message_id, message)
 	if message_id == hash("start") then
-		bestScore = sys.load(sys.get_save_file("sys_save_load", "bestScore")).bestScore
+		bestScore = getBestScore()
 
 		timeToSpawn = 1
 		quantity = 1
 		produced = 0
-		bomb = nil
+		bomb = null
 		bombTime = 0
 		freeze = 0
 		gameOver = false
-		
+		isPushHeart = false
+
 		for i = 0, 2 do
-			msg.post("mainWindow", hash("addHeart"))
+			msg.post("mainWindow#heart", hash("push"))
 		end
 
 		currentScore = 0
 		msg.post("mainWindow", hash("setScore"), { curr = currentScore, best = bestScore })
 	elseif message_id == hash("gameOver") then
-		while quantityOfHearts > 0 do
-			go.delete(self.hearts[quantityOfHearts])
-			self.hearts[quantityOfHearts] = nil
-
-			quantityOfHearts = quantityOfHearts - 1
-		end
-		
 		gameOver = true
 		msg.post("mainWindow", hash("windowResult"))
-	elseif message_id == hash("removeHeart") then
-		go.delete(self.hearts[quantityOfHearts])
-		self.hearts[quantityOfHearts] = nil
-
-		quantityOfHearts = quantityOfHearts - 1
-		if quantityOfHearts <= 0 then
-			msg.post("mainWindow", hash("gameOver"))
-		end
-	elseif message_id == hash("addHeart") then
-		if quantityOfHearts == maxHeart then
-			return nil
-		end
-
-		local pos = vmath.vector3(
-			width - 0.05 * width * quantityOfHearts - 100, 
-			heartY,
-			quantityOfHearts / 10
-		)
-
-		quantityOfHearts = quantityOfHearts + 1
-		self.hearts[quantityOfHearts] = factory.create("mainWindow#hearts", pos)
+	elseif message_id == hash("updateWindSize") then
+		width = message.w
+		height = message.h
 	elseif message_id == hash("updateScore") then
 		bestScore = message.score
 		local filename = sys.get_save_file("sys_save_load", "bestScore")
 		sys.save(filename, { bestScore = bestScore })
-	end
-end
-
-local pos = null
-function on_input(self, action_id, action)
-	if action_id == hash("touch") then
-		local currentPos = vmath.vector3(action.x, action.y, 0)
-
-		if action.pressed then
-			pos = currentPos
-		else
-			msg.post(
-				"@render:",
-				"draw_line",
-				{ 
-					start_point = currentPos, 
-					end_point = pos,
-					color = vmath.vector4(1, 1, 1, 1)
-				}
-			)
-			pos = currentPos
-		end
 	end
 end
