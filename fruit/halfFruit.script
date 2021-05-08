@@ -2,16 +2,44 @@ go.property("nameFruit", hash("half_banana0"))
 go.property("time", 0)
 go.property("speed", 0)
 go.property("v", vmath.vector3(0, 0, 0))
+go.property("pushSecond", false)
+
+local function secondName(s)
+	if s == hash("half_banana0") then
+		return hash("half_banana1")
+
+	elseif s == hash("half_orange0") then
+		return hash("half_orange1")
+
+	elseif s == hash("half_frozenLime0") then
+		return hash("half_frozenLime1")
+	end
+end
 
 function init(self)
 	msg.post("#sprite", "play_animation", { id = self.nameFruit })
+
+	if self.pushSecond == false then										-- add second half
+		factory.create(
+			"mainWindow#pushHalves",
+			go.get_position(),
+			nil,
+			{
+				v = -self.v,
+				time = self.time,
+				nameFruit = secondName(self.nameFruit),
+				speed = self.speed,
+				pushSecond = true
+			}
+		)
+	end
 end
 
 function update(self, dt)
 	local pos = go.get_position()
 
 	local speed = self.speed * dt
-	if freeze > 0 then														-- speed - 33%
+	if freeze > 0 then
 		speed = speed * math.max(1 / 3, - 2 * freeze / 3 + 1)
 	end
 
@@ -23,20 +51,19 @@ function update(self, dt)
 
 		move = move + b
 	end
-	
+
 	pos = pos + move * speed
 
-	if pos.y < -110 then													-- remove
+	if pos.y < -110 then
 		go.delete()
 	end
 
 	self.time = self.time + speed
 
-	local nextAngle = go.get(go.get_id(), "euler.z") + 20 * speed			-- rotate
+	local nextAngle = go.get(go.get_id(), "euler.z") + 20 * speed
 	go.set(go.get_id(), "euler.z", nextAngle)
 
-	local nextScale = go.get_scale() * (1 + speed / 100)					-- rescale
-	go.set_scale(nextScale)
+	go.set_scale(go.get_scale() * (1 + speed / 100))
 
-	go.set_position(pos)													-- move
+	go.set_position(pos)
 end

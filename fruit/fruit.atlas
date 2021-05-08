@@ -35,11 +35,15 @@ images {
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
-  image: "/assets/fruit/waterbomb.png"
+  image: "/assets/fruit/bomb.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
   image: "/assets/fruit/heart.png"
+  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
+}
+images {
+  image: "/assets/effects/line.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 animations {
@@ -142,6 +146,6 @@ animations {
   flip_horizontal: 0
   flip_vertical: 0
 }
-margin: 0
+margin: 1
 extrude_borders: 0
 inner_padding: 0

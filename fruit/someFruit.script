@@ -8,14 +8,15 @@ function init(self)
 	msg.post(".", "acquire_input_focus")
 
 	msg.post("#sprite", "play_animation", { id = self.nameFruit })
-	go.set(go.get_id(), "euler.z", randReal(0, 360))
-	go.set_scale(go.get_scale() * 1.3)
+
+	self.angle = randReal(0, 360)
+	go.set(go.get_id(), "euler.z", self.angle)
 
 	local startY = -100
-	local y0 = math.sqrt(-2 * gravity.y * height) * randReal(0.5, 0.6)		-- max height(50-60%)
+	local y0 = math.sqrt(-2 * gravity.y * height) * randReal(0.5, 0.6)		-- max height 50-60%
 	self.v = vmath.vector3(0, y0 - startY, 0)
 
-	local startX = randReal(startWidth / 5, startWidth / 3)
+	local startX = randReal(width / 5, width / 3)
 	self.v.x = -gravity.y * width / (2 * self.v.y)
 	if percents(30) then													-- throw side
 		startX = startX - 2 * width / 3
@@ -25,7 +26,7 @@ function init(self)
 	end
 	if percents(50) then
 		self.v.x = -self.v.x
-		startX = startWidth - startX
+		startX = width - startX
 	end
 
 	self.speed = 2
@@ -36,24 +37,39 @@ function init(self)
 		go.set_scale(go.get_scale() * 5)
 		self.speed = self.speed * 1.5
 	end
+	if self.nameFruit == hash("bomb") then
+		go.set_scale(go.get_scale() * 2)
+	end
 
 	self.scale = go.get_scale()
+
 	go.set_position(vmath.vector3(startX, startY, randReal(0.0, 1.0)))
 end
 
 function update(self, dt)
-	if self.nameFruit == hash("waterbomb") and self.popTime ~= 0 then
+	if self.popTime ~= 0 and self.nameFruit == hash("bomb") then			-- don't touch exploded bomb
 		return nil
-	end
-
-	if (os.clock() - predCutTime) > 0.3 and not gameOver then
-		factory.create("mainWindow#setText", pos, nil, { numCombo = combo })
-		combo = 0
 	end
 
 	local pos = go.get_position()
 
-	if gameOver and self.popTime == 0 then
+	if (os.clock() - predCutTime) > 0.3 and not gameOver then
+		if combo > 2 then													-- update score
+			currentScore = currentScore + 2 * combo							-- bonus for big combo
+		else
+			currentScore = currentScore + combo
+		end
+
+		if bestScore < currentScore then									-- set new score
+			bestScore = currentScore
+		end
+		msg.post("mainWindow", hash("setScore"), { curr = currentScore, best = bestScore })
+																			-- print combo
+		factory.create("mainWindow#setText", pos, nil, { numCombo = combo }, 0.3)
+		combo = 0
+	end
+
+	if gameOver and self.popTime == 0 then									-- clear fruit
 		if bomb == null then
 			msg.post(msg.url(), hash("cut"), { pos = pos - gravity})
 		else
@@ -68,9 +84,10 @@ function update(self, dt)
 	end
 
 	local move = self.v
-	if self.nameFruit ~= hash("heart") or self.popTime == 0 then
+	if self.nameFruit ~= hash("heart") or self.popTime == 0 then			-- don't move popped heart
 		move = move + gravity * self.time
-		if bombTime > 0.1 then
+
+		if bombTime > 0.1 then												-- + explosion
 			local b = (pos - bomb) / (sqr(pos.x - bomb.x) + sqr(pos.y - bomb.y))
 			b.z = 0
 			b = (vmath.length(self.v) / vmath.length(b)) * b
@@ -82,7 +99,7 @@ function update(self, dt)
 	pos = pos + move * speed
 
 	if pos.y < -110 then													-- remove
-		if self.nameFruit ~= hash("waterbomb") and self.nameFruit ~= hash("heart") then
+		if self.nameFruit ~= hash("bomb") and self.nameFruit ~= hash("heart") then
 			msg.post("mainWindow#heart", hash("pop"))
 		end
 
@@ -91,102 +108,75 @@ function update(self, dt)
 
 	self.time = self.time + speed
 
-	if self.popTime ~= 0 then
-		if self.nameFruit == hash("heart") and not gameOver then
-			go.set_position(pos)
+	if self.popTime ~= 0 and self.nameFruit ~= hash("heart") then			-- fade out blot
+		local alpha = (self.time - self.popTime) / 2
 
-			if vmath.length(pos - lastHeart) < width * 0.05 then
-				msg.post("mainWindow#heart", hash("push"), { scl = go.get_scale() } )
-				go.delete()
-			end
+		if alpha < 1 then
+			go.set("#sprite", "tint", vmath.vector4(1, 1, 1, 1 - alpha))
 		else
-			local alpha = (self.time - self.popTime) / 2
-
-			if alpha < 1 then
-				go.set("#sprite", "tint", vmath.vector4(1, 1, 1, 1 - alpha))
-			else
-				go.delete()
-			end
+			go.delete()
 		end
 
 		return nil
 	end
 
-	local nextAngle = go.get(go.get_id(), "euler.z") + 20 * speed			-- rotate
-	go.set(go.get_id(), "euler.z", nextAngle)
+	self.angle = self.angle + 20 * speed									-- rotate
+	go.set(go.get_id(), "euler.z", self.angle)
 
-	self.scale = self.scale * (1 + speed / 100)								-- rescale
-	go.set_scale(self.scale)
+	self.scale = self.scale * (1 + speed / 100)
+	go.set_scale(self.scale)						 						-- rescale
 
 	go.set_position(pos)													-- move
+end
+
+local function firstName(s)
+	if s == hash("banana") then
+		return hash("half_banana0")
+
+	elseif s == hash("orange") then
+		return hash("half_orange0")
+
+	elseif s == hash("frozenLime") then
+		return hash("half_frozenLime0")
+	end
 end
 
 function on_message(self, message_id, message)
 	if message_id == hash("cut") then
 		local pos = go.get_position()
+		local cutV = pos - message.pos
 		pos.z = 0
 
 		self.popTime = self.time
 		timeToSpawn = timeToSpawn - 0.1
 
-		if self.nameFruit == hash("waterbomb") then
-			bomb = pos
+		if self.nameFruit == hash("bomb") then
+			bomb = pos														-- make boom
 			bombTime = 2.0
 
 			msg.post("#sprite", "play_animation", { id = hash("boom") })
-			go.set_scale(go.get_scale() * 2)
 
-			local all = quantityOfHearts
+			local all = quantityOfHearts									-- set game over
 			for i = 1, all do
 				msg.post("mainWindow#heart", hash("pop"))
 			end
-		elseif self.nameFruit ~= hash("heart") then
-			if not gameOver then
-				currentScore = currentScore + 1								-- update score
-				msg.post("mainWindow", hash("setScore"), { curr = currentScore, best = bestScore })
-			end
 
-			if currentScore > bestScore then
-				bestScore = currentScore
-				msg.post("mainWindow", hash("updateScore"), { score = currentScore })
-			end
-
+		elseif self.nameFruit ~= hash("heart") then							-- make halves
 			if self.nameFruit == hash("frozenLime") then
 				freeze = 6.0
 			end
 
-			local fruit = string.sub(
-				tostring(self.nameFruit),
-				8,
-				#tostring(self.nameFruit) - 1
-			)
-
-			local cutV = pos - message.pos
-			local rot90 = vmath.vector3(-cutV.y, cutV.x, cutV.z)
-			rot90 = rot90 * vmath.length(self.v) / vmath.length(rot90)
+			local rot90 = vmath.vector3(-cutV.y, cutV.x, 0)					-- perpendicular and
+			rot90 = 0.5 * rot90 * vmath.length(self.v) / vmath.length(rot90)-- with the half force
 
 			factory.create(
 				"mainWindow#pushHalves",
 				vmath.vector3(pos.x, pos.y, randReal(-0.9, 0.0)),
 				nil,
 				{
-					v = 0.5 * rot90,
+					v = rot90,
 					time = self.time,
-					nameFruit = hash("half_" .. fruit .. "0"),
-					speed = self.speed * 1.5
-				}, 
-				self.scale
-			)
-
-			local rotM90 = -rot90
-			factory.create(
-				"mainWindow#pushHalves",
-				vmath.vector3(pos.x, pos.y, randReal(-0.9, 0.0)),
-				nil,
-				{
-					v = 0.5 * rotM90,
-					time = self.time,
-					nameFruit = hash("half_" .. fruit .. "1"),
+					nameFruit = firstName(self.nameFruit),
 					speed = self.speed * 1.5
 				},
 				self.scale
@@ -194,8 +184,12 @@ function on_message(self, message_id, message)
 																			-- blot
 			msg.post("#sprite", "play_animation", { id = hash("pop" .. math.random(0, 2)) })
 			go.set_scale(go.get_scale() * 3)
-			go.set_position(vmath.vector3(pos.x, pos.y, math.random()))
 		end
+
+		local angle =  math.atan(cutV.y / cutV.x) * (180 / math.pi) - 90	-- (in degree)
+																			-- cut line
+		factory.create("mainWindow#printCut", pos, nil, { rot = angle }, 0.6)
+
 	elseif message_id == hash("animation_done") and message.id == hash("boom") then
 		go.delete()
 	end
@@ -205,7 +199,7 @@ local function dist(a, b)
 	return math.abs(a.x - b.x) + math.abs(a.y - b.y)
 end
 
-local predCursorPos = vmath.vector3()
+local predCursorPos = null
 local predTime = os.clock()
 function on_input(self, action_id, action)
 	if action_id == hash("touch") and not gameOver and self.popTime == 0 then
@@ -214,19 +208,22 @@ function on_input(self, action_id, action)
 		if action.pressed then												-- start input
 			predCursorPos = cursorPos
 			predTime = os.clock()
-		else																-- chech cut and update pos
+		else																-- check cut and update pos
 			if dist(go.get_position(), cursorPos) < (width + height) / 20 then
 				local cursorSpeed = dist(predCursorPos, cursorPos) / (os.clock() - predTime)
-				if cursorSpeed > (width + height)  / 3 then					-- cutting
-					if self.nameFruit ~= hash("waterbomb") then				-- next combo
+				if cursorSpeed > (width + height) / 3 then					-- cutting
+					if self.nameFruit ~= hash("bomb") then					-- next combo
 						combo = combo + 1
 					end
 
 					if self.nameFruit == hash("heart") then
-						go.animate(											-- rotate and then move
-							go.get_id(), "euler.z",
-							go.PLAYBACK_ONCE_FORWARD, 0, go.EASING_LINEAR, 0.5, 0,
-							function() self.v = (lastHeart - go.get_position()) / 2 end
+						go.animate(											-- move
+							go.get_id(), "position", 
+							go.PLAYBACK_ONCE_FORWARD, lastHeart, go.EASING_LINEAR, 1, 0.3,
+							function()										-- add
+								msg.post("mainWindow#heart", hash("push"), { scl = self.scale } )
+								go.delete()
+							end
 						)
 
 						self.v = null

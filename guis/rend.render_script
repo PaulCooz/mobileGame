@@ -85,10 +85,10 @@ function update(self)
 	render.draw(self.text_pred)
 	render.disable_state(render.STATE_STENCIL_TEST)
 
-	msg.post("main:/mainWindow#main", "updateWindSize", { 
-		w = render.get_window_width(),
-		h = render.get_window_height()
-	} )
+	-- msg.post("main:/mainWindow#main", "updateWindSize", { 
+	-- 	w = render.get_window_width(),
+	-- 	h = render.get_window_height()
+	-- } )
 end
 
 function on_message(self, message_id, message)

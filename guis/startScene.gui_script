@@ -1,4 +1,4 @@
-local isEnable																-- is showing this scene
+local isEnable = true														-- is showing this scene
 
 local function getBestScore()
 	return sys.load(sys.get_save_file("sys_save_load", "bestScore")).bestScore or 0
@@ -6,8 +6,6 @@ end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
-	
-	isEnable = true
 
 	gui.set_text(															-- set best score on scene
 		gui.get_node("bestScore"), 
@@ -15,8 +13,8 @@ function init(self)
 	)
 end
 
-local function onHide(self, node)
-	msg.post("#startScene", "disable")										-- swap scenes and start game
+local function onHide(self, node)											-- swap scenes and start game
+	msg.post("#startScene", "disable")
 	msg.post("#kitchenScene", "show")
 	msg.post("mainWindow", "start")
 end
@@ -46,6 +44,7 @@ function on_message(self, message_id, message, sender)
 		gui.animate(n1, gui.PROP_COLOR, colorN1, gui.EASING_INOUTQUAD, 0.5)
 		gui.animate(n2, gui.PROP_COLOR, vmath.vector4(1, 1, 1, 1), gui.EASING_INOUTQUAD, 0.5)
 		gui.animate(n2, gui.PROP_SCALE, vmath.vector3(2, 2, 1), gui.EASING_INOUTQUAD, 0.5, 0.0)
+
 	elseif message_id == hash("setKitchen") and isEnable then
 		isEnable = false
 
