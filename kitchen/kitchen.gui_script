@@ -1,0 +1,56 @@
+function setStartScene()
+	score:setAlpha(0, 0.5)
+	popup:setAlpha(0, 0.5)
+	restart:setAlpha(0, 0.5)
+	home:setAlpha(0, 0.5)
+
+	timer.delay(1, false,
+		function()
+			msg.post("main:/mainGO#main", "setStartScene")
+		end
+	)
+end
+
+function restartGame()
+	popup:setPosY(1000)
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	local node = require("main/gui/guiNode")
+	local text = require("main/gui/guiText")
+	local button = require("main/gui/guiButton")
+
+	score = text:new("score")
+	popup = node:new("popup")
+	restart = button:new("restart")
+	home = button:new("home")
+
+	local FadeinTime = 0.5
+	score:fadein(FadeinTime)
+	popup:fadein(FadeinTime)
+	restart:fadein(FadeinTime)
+	home:fadein(FadeinTime)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("setScore") then
+		if message.current < message.best then
+			score:setText(message.current .. "|" .. message.best)
+		else
+			score:setText(message.current)
+			-- msg.post("mainWindow", hash("updateScore"), { score = message.best })
+		end
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") then
+		if gui.pick_node(restart.node, action.x, action.y) then
+			restart:push(restartGame)
+		elseif gui.pick_node(home.node, action.x, action.y) then
+			home:push(setStartScene)
+		end
+	end
+end

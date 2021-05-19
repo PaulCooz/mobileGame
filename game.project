@@ -1,22 +1,18 @@
-[project]
-title = Mobile game
-
 [bootstrap]
 main_collection = /main/main.collectionc
-render = /guis/rend.renderc
+render = /main/main.renderc
 
-[input]
-use_accelerometer = 0
+[script]
+shared_state = 1
 
 [display]
 width = 1136
 height = 640
-dynamic_orientation = 1
-vsync = 1
 
-[gui]
-max_particlefx_count = 1024
+[android]
+input_method = HiddenInputField
 
-[particle_fx]
-max_count = 1024
+[project]
+title = MyProject
+version = 1.1
 

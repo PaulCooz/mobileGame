@@ -1,11 +1,11 @@
-script: "/guis/startScene.gui_script"
+script: "/startScene/startScene.gui_script"
 fonts {
-  name: "homeFont"
-  font: "/assets/gui/common.font"
+  name: "common"
+  font: "/assets/fonts/common.font"
 }
 textures {
-  name: "gui"
-  texture: "/guis/gui.atlas"
+  name: "startScene"
+  texture: "/main/gui/gui.atlas"
 }
 background_color {
   x: 0.0
@@ -16,7 +16,7 @@ background_color {
 nodes {
   position {
     x: 568.0
-    y: 144.0
+    y: 150.0
     z: 0.0
     w: 1.0
   }
@@ -46,10 +46,10 @@ nodes {
   }
   type: TYPE_BOX
   blend_mode: BLEND_MODE_ALPHA
-  texture: "gui/Next"
+  texture: "startScene/Next"
   id: "startButton"
-  xanchor: XANCHOR_LEFT
-  yanchor: YANCHOR_TOP
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
   pivot: PIVOT_CENTER
   adjust_mode: ADJUST_MODE_FIT
   layer: ""
@@ -69,8 +69,8 @@ nodes {
 }
 nodes {
   position {
-    x: 532.0
-    y: 362.0
+    x: 568.0
+    y: 540.0
     z: 0.0
     w: 1.0
   }
@@ -81,8 +81,8 @@ nodes {
     w: 1.0
   }
   scale {
-    x: 1.0
-    y: 1.0
+    x: 2.0
+    y: 2.0
     z: 1.0
     w: 1.0
   }
@@ -93,18 +93,18 @@ nodes {
     w: 1.0
   }
   color {
-    x: 0.7019608
-    y: 0.9019608
-    z: 0.9019608
+    x: 1.0
+    y: 1.0
+    z: 1.0
     w: 1.0
   }
   type: TYPE_TEXT
   blend_mode: BLEND_MODE_ALPHA
-  text: "best score:  nil"
-  font: "homeFont"
-  id: "bestScore"
-  xanchor: XANCHOR_LEFT
-  yanchor: YANCHOR_TOP
+  text: "Fruit Ninja Maket"
+  font: "common"
+  id: "nameGame"
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
   pivot: PIVOT_CENTER
   outline {
     x: 1.0
@@ -118,7 +118,7 @@ nodes {
     z: 1.0
     w: 1.0
   }
-  adjust_mode: ADJUST_MODE_STRETCH
+  adjust_mode: ADJUST_MODE_FIT
   line_break: false
   layer: ""
   inherit_alpha: true
@@ -132,7 +132,7 @@ nodes {
 nodes {
   position {
     x: 568.0
-    y: 500.0
+    y: 390.0
     z: 0.0
     w: 1.0
   }
@@ -143,8 +143,8 @@ nodes {
     w: 1.0
   }
   scale {
-    x: 2.0
-    y: 2.2
+    x: 1.0
+    y: 1.0
     z: 1.0
     w: 1.0
   }
@@ -155,18 +155,18 @@ nodes {
     w: 1.0
   }
   color {
-    x: 0.7019608
-    y: 0.8
+    x: 1.0
+    y: 1.0
     z: 1.0
     w: 1.0
   }
   type: TYPE_TEXT
   blend_mode: BLEND_MODE_ALPHA
-  text: "fruit ninja maket"
-  font: "homeFont"
-  id: "gameName"
-  xanchor: XANCHOR_LEFT
-  yanchor: YANCHOR_TOP
+  text: "max score: null"
+  font: "common"
+  id: "maxScore"
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
   pivot: PIVOT_CENTER
   outline {
     x: 1.0
@@ -180,7 +180,7 @@ nodes {
     z: 1.0
     w: 1.0
   }
-  adjust_mode: ADJUST_MODE_STRETCH
+  adjust_mode: ADJUST_MODE_FIT
   line_break: false
   layer: ""
   inherit_alpha: true

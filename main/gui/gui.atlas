@@ -1,25 +1,21 @@
 images {
-  image: "/assets/gui/Blank.png"
+  image: "/assets/images/gui/Blank.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
-  image: "/assets/gui/Home.png"
+  image: "/assets/images/gui/Home.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
-  image: "/assets/gui/Next.png"
+  image: "/assets/images/gui/Next.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
-  image: "/assets/gui/Refresh.png"
+  image: "/assets/images/gui/Refresh.png"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 images {
-  image: "/assets/gui/woodenBackground.jpg"
-  sprite_trim_mode: SPRITE_TRIM_MODE_OFF
-}
-images {
-  image: "/assets/gui/heart.png"
+  image: "/assets/images/woodenBackground.jpg"
   sprite_trim_mode: SPRITE_TRIM_MODE_OFF
 }
 margin: 0

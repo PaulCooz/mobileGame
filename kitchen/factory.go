@@ -1,6 +1,6 @@
 components {
-  id: "someFruit"
-  component: "/fruit/someFruit.script"
+  id: "factory"
+  component: "/kitchen/factory.script"
   position {
     x: 0.0
     y: 0.0
@@ -14,12 +14,10 @@ components {
   }
 }
 embedded_components {
-  id: "sprite"
-  type: "sprite"
-  data: "tile_set: \"/fruit/fruit.atlas\"\n"
-  "default_animation: \"banana\"\n"
-  "material: \"/builtins/materials/sprite.material\"\n"
-  "blend_mode: BLEND_MODE_ALPHA\n"
+  id: "pusher"
+  type: "factory"
+  data: "prototype: \"/kitchen/objects/fruit.go\"\n"
+  "load_dynamically: false\n"
   ""
   position {
     x: 0.0

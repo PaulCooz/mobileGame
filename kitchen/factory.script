@@ -1,0 +1,110 @@
+local allObjects = {
+	"banana", "frozenLime", "bomb", "heart", "orange"
+}
+local basket = {}
+local score = 0
+
+local function addNewObject(name)
+	local fruit = require("kitchen/objects/fruit")
+	local new = fruit:new(name)
+	basket[new.id] = new
+end
+local function addNewHalves(name, cooked)
+	local halfFruit = require("kitchen/objects/halfFruit")
+	local new = halfFruit:newHalf(name, cooked)
+	basket[new.id] = new
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+
+	msg.post("kitchenGO#kitchen", hash("setScore"), { current = score, best = 10 })
+end
+
+local timeForSpawn = 1
+local currentCouantity = 1
+function update(self, dt)
+	if timeForSpawn <= 0 then
+		if currentCouantity > 0 then
+		else
+		end
+
+		local objectName = allObjects[math.random(#allObjects)]
+		addNewObject(objectName)
+
+		timeForSpawn = 3
+		currentCouantity = 1
+	end
+	timeForSpawn = timeForSpawn - dt
+
+	for i in pairs(basket) do
+		basket[i]:move(vmath.vector3(0, 0, 0), dt)
+	end
+end
+
+local function converting(s)
+	if s == hash("banana") then
+		return "banana"
+	elseif s == hash("frozenLime") then
+		return "frozenLime"
+	elseif s == hash("orange") then
+		return "orange"
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("remove") then
+		basket[message.id] = nil
+	elseif message_id == hash("cut") then
+		score = score + 1
+		msg.post("kitchenGO#kitchen", hash("setScore"), { current = score, best = 10 })
+
+		local name = converting(message.hashName)
+		if name ~= nil then													-- make halves
+			addNewObjects({
+					lifeTime = message.lifeTime,
+					movingVector = message.movingVector,
+					hashName = hash(name .. "0"),
+					touchebal = false,
+					scale = message.scale
+				}, 
+				message.position
+			)
+			addNewObjects({ 
+					lifeTime = message.lifeTime,
+					movingVector = -message.movingVector,
+					hashName = hash(name .. "1"),
+					touchebal = false,
+					scale = message.scale
+				}, 
+				message.position
+			)
+		end
+	elseif message_id == hash("windowResized") then
+		for i in pairs(basket) do
+			basket[i]:windowResized(message)
+		end
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") then
+		for i in pairs(basket) do
+			if basket[i].touchebal and basket[i]:isCuted(action) then
+				addNewHalves("banana0", {
+					speed = basket[i].speed,
+					movingVector = basket[i].movingVector,
+					lifeTime = basket[i].lifeTime,
+					minY = basket[i].minY,
+					position = basket[i].position,
+					scale = go.get_scale(basket[i].id),
+					touchebal = false
+				})
+
+				basket[i]:delete()
+
+				msg.post("#", "remove", { id = i })
+			end
+		end
+	end
+end

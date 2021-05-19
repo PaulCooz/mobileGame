@@ -1,140 +1,19 @@
-gravity = vmath.vector3(0, -100, 0)
-width, height = window.get_size()
-null = vmath.vector3(0, 0, 0)
-
-bestScore = 0
-gameOver = true
-quantityOfHearts = 0
-maxHeart = 5
-local isPushHeart
-
-local function getBestScore()
-	return sys.load(sys.get_save_file("sys_save_load", "bestScore")).bestScore or 0
-end
-
-function sqr(a)
-	return a * a
-end
-
-function randReal(from, to)
-	return from + (to - from) * math.random()
-end
-
-function percents(percent)
-	if math.random(1, 100) <= percent then
-		return true
-	else
-		return false
-	end
-end
-
 function init(self)
-	msg.post("#kitchenScene", "disable")
-	-- msg.post("mainWindow#", hash("updateScore"), { score = 0 })
+	msg.post(".", "acquire_input_focus")
 
-	math.randomseed(os.time())
+	msg.post("#startScene", "load")
 end
 
-local produced
-local function getNext()													-- next set parameters
-	produced = produced + 1
-	local k = math.min(produced / 10, 1)
-
-	return 4 - k, randReal(2 + k, 4 + k)
-end
-
-local quantity
-local quantityOfBombs = 0
-local commonFruit = {
-	"banana", "orange"
-}
-
-local function getAnObject()
-	if percents(40) and quantityOfBombs < quantity / 2 then
-		quantityOfBombs = quantityOfBombs + 1
-		return hash("bomb")
-
-	elseif percents(10) and quantityOfHearts < maxHeart and not isPushHeart then
-		isPushHeart = true
-		return hash("heart")
-
-	elseif percents(10) then
-		return hash("frozenLime")
-
-	else
-		return hash(commonFruit[math.random(#commonFruit)])
-	end
-end
-
-function update(self, dt)
-	if gameOver then
-		return nil
-	end 
-
-	if timeToSpawn <= 0 then
-		if quantity > 0 then												-- output objects
-			timeToSpawn = randReal(0.1, 0.3)
-			quantity = quantity - 1
-
-			local maxSpriteArea = 850 * 850
-
-			factory.create(
-				"mainWindow#pushFruit",
-				vmath.vector3(),
-				nil,
-				{ nameFruit = getAnObject() }, 
-				width * height / (6 * maxSpriteArea)
-			)
-		else																-- wait new set
-			timeToSpawn, quantity = getNext()
-			quantityOfBombs = 0
-			isPushHeart = false
-		end
-	end
-
-	if freeze > 0 then
-		freeze = freeze - dt
-		timeToSpawn = timeToSpawn - 2 * dt / 3								-- time - 33%
-	else
-		timeToSpawn = timeToSpawn - dt
-	end
-	if bombTime > 0 then
-		bombTime = bombTime - dt 
-	end
-	if bombTime <= 0 then
-		bomb = null
-		bombTime = 0
-	end
-end
-
-function on_message(self, message_id, message)
-	if message_id == hash("start") then										-- start game and reset variables
-		bestScore = getBestScore()
-		timeToSpawn = 1
-		quantity = 1
-		produced = 0
-		bomb = null
-		bombTime = 0
-		freeze = 0
-		gameOver = false
-		isPushHeart = false
-		currentScore = 0
-
-		for i = 0, 2 do
-			msg.post("mainWindow#heart", "push")
-		end
-		msg.post("mainWindow", "setScore", { curr = currentScore, best = bestScore })
-
-	elseif message_id == hash("gameOver") then								-- show popup
-		gameOver = true
-		msg.post("#kitchenScene", "windowResult")
-
-	-- elseif message_id == hash("updateWindSize") then						-- if needed
-	-- 	width = message.w
-	-- 	height = message.h
-
-	elseif message_id == hash("updateScore") then
-		bestScore = message.score
-		sys.save(sys.get_save_file("sys_save_load", "bestScore"), { bestScore = bestScore })
+function on_message(self, message_id, message, sender)
+	if message_id == hash("proxy_loaded") then
+		msg.post(sender, "enable")
+	elseif message_id == hash("setKitchen") then
+		msg.post("#startScene", "disable")
+		msg.post("#startScene", "unload")
+		msg.post("#kitchen", "load")
+	elseif message_id == hash("setStartScene") then
+		msg.post("#kitchen", "disable")
+		msg.post("#kitchen", "unload")
+		msg.post("#startScene", "load")
 	end
 end

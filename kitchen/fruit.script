@@ -1,0 +1,35 @@
+go.property("hashName", hash("banana"))
+
+local width = 1136
+local height = 640
+
+local function length(v)
+	return math.sqrt(v.x * v.x + v.y * v.y)
+end
+
+function init(self)
+	msg.post("#sprite", "play_animation", { id = self.hashName })
+end
+
+function update(self, dt)
+	local edge = math.min(go.get("#sprite", "size.x"), go.get("#sprite", "size.y"))
+
+	local tenPercentOfArea = math.sqrt(0.10 * width * height / (edge * edge))
+	local removeDistortions = vmath.vector3(height / 640, width / 1136, 1)
+	removeDistortions = removeDistortions / length(removeDistortions)
+
+	local scale = tenPercentOfArea * removeDistortions
+	go.set_scale(scale)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("windowResized") then
+		width = message.width
+		height = message.height
+	elseif message_id == hash("pop") then
+		msg.post("#sprite", "play_animation", { id = hash("cutPartc") })
+
+		go.animate("#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 0), go.EASING_LINEAR, 1, 1)
+		timer.delay(2, false, function() go.delete() end)
+	end
+end
