@@ -48,7 +48,7 @@ function init(self)
 	-- or send a message to the render script to change projection:
 	-- msg.post("@render:", "use_stretch_projection", { near = -1, far = 1 })
 	-- msg.post("@render:", "use_fixed_projection", { near = -1, far = 1, zoom = 1 })
-	-- msg.post("@render:", "use_fixed_fit_projection", { near = -1, far = 1 })
+	msg.post("@render:", "use_fixed_fit_projection", { near = -1, far = 1 })
 	self.near = -1
 	self.far = 1
 	self.projection_fn = stretch_projection
@@ -86,7 +86,7 @@ function update(self)
 	render.disable_state(render.STATE_STENCIL_TEST)
 end
 
-function on_message(self, message_id, message)
+function on_message(self, message_id, message, sender)
 	if message_id == hash("clear_color") then
 		self.clear_color = message.color
 	elseif message_id == hash("set_view_projection") then
@@ -107,6 +107,19 @@ function on_message(self, message_id, message)
 		self.near = message.near or -1
 		self.far = message.far or 1
 		self.projection_fn = fixed_fit_projection
+	elseif message_id == hash("getScale") then
+		local side1 = math.min(message.sprite.x, message.sprite.y)
+		local side2 = math.min(render.get_window_height(), render.get_window_width())
+		local percentOfArea = math.sqrt(message.percent / 100) * side2 / side1
+
+		-- local removeDistortions = vmath.vector3(
+		-- 	render.get_window_height() / render.get_height(),
+		-- 	render.get_window_width() / render.get_width(),
+		-- 	1
+		-- )
+		-- removeDistortions = removeDistortions / vmath.length(removeDistortions)
+
+		msg.post(sender, "returnScale", { scale = percentOfArea })
 	elseif message_id == hash("window_resized") then
 		msg.post("kitchen:/factory#factory", "windowResized", { width = message.width, height = message.height })
 	end

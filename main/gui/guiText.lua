@@ -1,5 +1,4 @@
-local commonNode = require("main/gui/guiNode")
-local textNode = commonNode
+local textNode = setmetatable({} ,{__index = require("main/gui/guiNode")})
 
 function textNode:new(name)
 	local currentNode = gui.get_node(name)
@@ -8,8 +7,8 @@ function textNode:new(name)
 		color = gui.get_color(currentNode),
 		scale = gui.get_scale(currentNode)
 	}
-	self.__index = self
-	return setmetatable(fields, self)
+
+	return setmetatable(fields, { __index = textNode })
 end
 
 function textNode:setText(text)

@@ -1,0 +1,30 @@
+function init(self)
+	msg.post(".", "acquire_input_focus")
+end
+
+local lastTouch = 0
+function update(self, dt)
+	if os.clock() - lastTouch > 0.1 then
+		particlefx.stop("#track")
+	end
+end
+
+local pos = nil
+function on_input(self, action_id, action)
+	if action_id == hash("touch") then
+		local currentPos = vmath.vector3(action.x, action.y, 0)						-- update dot
+		go.set_position(currentPos)
+		particlefx.play("#track")
+		lastTouch = os.clock()
+
+		if not action.pressed then
+			local v = currentPos - pos
+			local angle = 0
+			if v ~= vmath.vector3(0, 0, 0) then
+				angle =  math.atan(v.y / v.x) * (180 / math.pi)
+			end
+			go.set(go.get_id(), "euler.z", angle)
+		end
+		pos = currentPos
+	end
+end

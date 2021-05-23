@@ -12,6 +12,7 @@ function setStartScene()
 end
 
 function restartGame()
+	msg.post("/factory", "restart")
 	popup:setPosY(1000)
 end
 
@@ -27,11 +28,10 @@ function init(self)
 	restart = button:new("restart")
 	home = button:new("home")
 
-	local FadeinTime = 0.5
-	score:fadein(FadeinTime)
-	popup:fadein(FadeinTime)
-	restart:fadein(FadeinTime)
-	home:fadein(FadeinTime)
+	score:fadein()
+	popup:fadein()
+	restart:fadein()
+	home:fadein()
 end
 
 function on_message(self, message_id, message, sender)
@@ -39,9 +39,12 @@ function on_message(self, message_id, message, sender)
 		if message.current < message.best then
 			score:setText(message.current .. "|" .. message.best)
 		else
+			local mod = require("main/score")
+			mod:setBestScore(message.current)
 			score:setText(message.current)
-			-- msg.post("mainWindow", hash("updateScore"), { score = message.best })
 		end
+	elseif message_id == hash("gameOver") then
+		popup:setPosY(300)
 	end
 end
 

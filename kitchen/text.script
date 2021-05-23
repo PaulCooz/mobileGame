@@ -1,0 +1,23 @@
+go.property("numCombo", 0)
+
+function init(self)
+	if self.numCombo < 3 then
+		go.delete()
+	else
+		label.set_text("#label", "COMBO +" .. self.numCombo)
+		go.animate(
+			"#label", "color", go.PLAYBACK_ONCE_FORWARD, vmath.vector4(1, 1, 1, 0), 
+			go.EASING_LINEAR, 1, 1,
+			function() go.delete() end
+		)
+		msg.post("#", "windowResized")
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("windowResized") then
+		msg.post("@render:", "getScale", { sprite = vmath.vector3(1136, 640, 0), percent = 10 })
+	elseif message_id == hash("returnScale") then
+		go.set_scale(message.scale)
+	end
+end

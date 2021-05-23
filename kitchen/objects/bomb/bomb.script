@@ -1,0 +1,14 @@
+function init(self)
+	msg.post("#", "windowResized")
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("windowResized") then
+		msg.post("@render:", "getScale", { sprite = go.get("#sprite", "size"), percent = 8 })
+	elseif message_id == hash("returnScale") then
+		go.set_scale(message.scale)
+	elseif message_id == hash("pop") then
+		msg.post("#sprite", "play_animation", { id = hash("boom") })
+		timer.delay(1, false, function() go.delete() end)
+	end
+end

@@ -1,110 +1,297 @@
-local allObjects = {
-	"banana", "frozenLime", "bomb", "heart", "orange"
-}
-local basket = {}
-local score = 0
+local width = 1136																	-- window size
+local height = 640
+
+local basket = {}																	-- set of fruit
+local timeForSpawn = 1
+local currentQuantity = 1
+local pushHeart = false																-- one heart in push set
+local quantityOfBombs = 0
+
+local hearts = {}																	-- all heart
+local quantityOfHearts = 0
+local maxHeart = 5
+
+local frize = 0																		-- bonus frize
+local score = 0																		-- current score
+
+local currentCombo = 0
+local lastCutTime = 0
+local lastCutPos = vmath.vector3()
+
+local gameOver = false
+
+local function percents(percent)
+	if math.random(1, 100) <= percent then
+		return true
+	else
+		return false
+	end
+end
 
 local function addNewObject(name)
-	local fruit = require("kitchen/objects/fruit")
-	local new = fruit:new(name)
+	local fruit = require("kitchen/objects/fruit/fruit")
+	local new = fruit:new(name, width, height)
 	basket[new.id] = new
 end
-local function addNewHalves(name, cooked)
-	local halfFruit = require("kitchen/objects/halfFruit")
-	local new = halfFruit:newHalf(name, cooked)
+
+local function addNewHeart()
+	local heart = require("kitchen/objects/heart/heart")
+	local new = heart:new(width, height)
 	basket[new.id] = new
+end
+
+local function addNewBomb()
+	local bomb = require("kitchen/objects/bomb/bomb")
+	local new = bomb:new(width, height)
+	basket[new.id] = new
+end
+
+local function addNewHalves(cooked)
+	local halfFruit = require("kitchen/objects/halfFruit/halfFruit")
+
+	local rot90 = 0.5 * vmath.vector3(-cooked.movingVector.y, cooked.movingVector.x, 0)-- perpendicular
+	local name = cooked.name
+	local id = cooked.id
+
+	cooked.movingVector = -rot90
+	cooked.name = name .. "0"
+	cooked.id = id
+	local first = halfFruit:new(cooked)
+	basket[first.id] = first
+
+	cooked.movingVector = rot90
+	cooked.name = name .. "1"
+	cooked.id = id
+	local second = halfFruit:new(cooked)
+	basket[second.id] = second
+end
+
+local function addSomeObject()
+	local common = {
+		"banana", "orange", "greenApple"
+	}
+
+	if percents(40) and quantityOfBombs < currentQuantity / 2 then
+		quantityOfBombs = quantityOfBombs + 1
+		return addNewBomb()
+	elseif percents(20) and not pushHeart and quantityOfHearts < maxHeart then
+		pushHeart = true
+		return addNewHeart()
+	elseif percents(10) then
+		return addNewObject("frozenLime")
+	else
+		return addNewObject(common[math.random(#common)])
+	end
+end
+
+local function checkObject(object)													-- check what cuted
+	if object.name == "heart" then
+		if gameOver then
+			local down = object.position
+			object.position.y = object.minY
+			go.animate(object.id, "position", go.PLAYBACK_ONCE_FORWARD, down, go.EASING_LINEAR, 1)
+			return
+		end
+
+		local lastHeart = vmath.vector3(width * 0.94, height * 0.91, 0)
+		lastHeart.x = lastHeart.x - (quantityOfHearts + 1) * width / 20
+		go.animate(
+			object.id, "position",
+			go.PLAYBACK_ONCE_FORWARD, lastHeart, go.EASING_LINEAR, 1, 0.3,
+				function()
+					msg.post("#", "addHealth")
+				end
+		)
+	elseif object.name == "bomb" then
+		for i in pairs(basket) do
+			local dist = vmath.length(basket[i].position - object.position)
+			if dist ~= 0 then
+				local impulse = (basket[i].position - object.position) / (dist * dist)
+				impulse.z = 0
+				impulse = 0.5 * impulse * vmath.length(basket[i].movingVector) / vmath.length(impulse)
+
+				basket[i].movingVector = basket[i].movingVector + impulse
+			end
+		end
+
+		msg.post("#", "popHealth")
+	else
+		if object.name == "frozenLime" then
+			frize = 5
+		end
+
+		addNewHalves(object)
+
+		score = score + 1
+		msg.post("kitchenGO#kitchen", hash("setScore"), { current = score, best = best })
+	end
 end
 
 function init(self)
 	msg.post(".", "acquire_input_focus")
 
-	msg.post("kitchenGO#kitchen", hash("setScore"), { current = score, best = 10 })
+	local mod = require("main/score")
+	best = mod:getBestScore()
+	msg.post("kitchenGO#kitchen", hash("setScore"), { current = score, best = best })
+
+	for i = 1, 3 do
+		msg.post("#", "addHealth")
+	end
 end
 
-local timeForSpawn = 1
-local currentCouantity = 1
 function update(self, dt)
-	if timeForSpawn <= 0 then
-		if currentCouantity > 0 then
-		else
+	if not gameOver then
+		if os.clock() - lastCutTime > 0.3 then										-- combo text
+			factory.create("kitchenGO#comboText", lastCutPos, nil, { numCombo = currentCombo })
+			currentCombo = 0
 		end
 
-		local objectName = allObjects[math.random(#allObjects)]
-		addNewObject(objectName)
+		if timeForSpawn <= 0 then													-- spawner
+			if currentQuantity > 0 then
+				timeForSpawn = 0.5
+				currentQuantity = currentQuantity - 1
 
-		timeForSpawn = 3
-		currentCouantity = 1
+				addSomeObject()
+			else
+				currentQuantity = math.random(3, 5)
+				-- timeForSpawn = currentQuantity * 0.5
+				timeForSpawn = 0.5
+
+				quantityOfBombs = 0
+				pushHeart = false
+			end
+		end
+
+		if frize > 0 then															-- bonus check
+			frize = frize - dt
+			timeForSpawn = timeForSpawn - 2 * dt / 3
+		else
+			frize = 0
+			timeForSpawn = timeForSpawn - dt
+		end
 	end
-	timeForSpawn = timeForSpawn - dt
 
-	for i in pairs(basket) do
-		basket[i]:move(vmath.vector3(0, 0, 0), dt)
-	end
-end
-
-local function converting(s)
-	if s == hash("banana") then
-		return "banana"
-	elseif s == hash("frozenLime") then
-		return "frozenLime"
-	elseif s == hash("orange") then
-		return "orange"
+	for i in pairs(basket) do														-- move all objects
+		basket[i]:move(frize, dt)
 	end
 end
 
 function on_message(self, message_id, message, sender)
-	if message_id == hash("remove") then
+	if message_id == hash("remove") then											-- remove object
 		basket[message.id] = nil
-	elseif message_id == hash("cut") then
-		score = score + 1
-		msg.post("kitchenGO#kitchen", hash("setScore"), { current = score, best = 10 })
-
-		local name = converting(message.hashName)
-		if name ~= nil then													-- make halves
-			addNewObjects({
-					lifeTime = message.lifeTime,
-					movingVector = message.movingVector,
-					hashName = hash(name .. "0"),
-					touchebal = false,
-					scale = message.scale
-				}, 
-				message.position
-			)
-			addNewObjects({ 
-					lifeTime = message.lifeTime,
-					movingVector = -message.movingVector,
-					hashName = hash(name .. "1"),
-					touchebal = false,
-					scale = message.scale
-				}, 
-				message.position
-			)
+		if message.falled == true then
+			msg.post("#", "popHealth")
 		end
-	elseif message_id == hash("windowResized") then
+	elseif message_id == hash("cut") then
+		currentCombo = currentCombo + 1
+		lastCutPos = message.pos
+		lastCutTime = os.clock()
+
+		local cutV = message.object.position - message.pos
+		cutV.z = 0
+
+		local angle = math.atan(cutV.y / cutV.x) * (180 / math.pi) - 90
+		local scale = math.min(width, height) / 1000
+		factory.create("#cutSprite", message.pos, nil, { angle = angle }, scale)
+
+		checkObject(message.object)
+	elseif message_id == hash("addHealth") and not gameOver then					-- add one heart
+		if quantityOfHearts >= maxHeart then
+			return nil
+		end
+
+		local lastHeart = vmath.vector3(width * 0.94, height * 0.91, 0)
+		lastHeart.x = lastHeart.x - quantityOfHearts * width / 20
+		lastHeart.z =  quantityOfHearts / (quantityOfHearts + 1)
+
+		quantityOfHearts = quantityOfHearts + 1
+		hearts[quantityOfHearts] = factory.create("#addHealth", lastHeart, nil, { }, 0.01)
+	elseif message_id == hash("popHealth") then
+		if quantityOfHearts > 0 then
+			local number = quantityOfHearts
+			go.animate(																-- pop heart
+			hearts[number], "scale",
+				go.PLAYBACK_ONCE_FORWARD, 0.01, go.EASING_LINEAR, 0.5, 0,
+				function()
+					go.delete(hearts[number])
+				end
+			)
+
+			quantityOfHearts = quantityOfHearts - 1
+		end
+
+		if quantityOfHearts <= 0 then												-- game over
+			gameOver = true
+
+			for i in pairs(basket) do
+				if basket[i].touchebal then
+					msg.post("#", "cut", { object = basket[i], pos = vmath.vector3(width / 2, 0, 0) })
+				end
+				basket[i]:delete()
+			end
+
+			msg.post("kitchenGO#kitchen", "gameOver")
+		end
+	elseif message_id == hash("restart") then										-- restart game
+		for i = 1, 3 do
+			msg.post("#", "addHealth")
+		end
+
+		timeForSpawn = 1
+		currentQuantity = 1
+		pushHeart = false
+		quantityOfBombs = 0
+
+		frize = 0
+		score = 0
+
+		currentCombo = 0
+		lastCutTime = 0
+		lastCutPos = vmath.vector3()
+
+		gameOver = false
+
+		msg.post("kitchenGO#kitchen", hash("setScore"), { current = score, best = best })
+	elseif message_id == hash("windowResized") then									-- check all for scale
+		-- width = message.width
+		-- height = message.height
+
+		for i = 1, quantityOfHearts do
+			msg.post(hearts[i], "windowResized", message)
+		end
 		for i in pairs(basket) do
-			basket[i]:windowResized(message)
+			msg.post(basket[i].id, "windowResized", message)
 		end
 	end
 end
 
+local function dist(a, b)
+	return math.abs(a.x - b.x) + math.abs(a.y - b.y)
+end
+
+local predCursorPos = vmath.vector3()
+local predTime = 0
 function on_input(self, action_id, action)
 	if action_id == hash("touch") then
-		for i in pairs(basket) do
-			if basket[i].touchebal and basket[i]:isCuted(action) then
-				addNewHalves("banana0", {
-					speed = basket[i].speed,
-					movingVector = basket[i].movingVector,
-					lifeTime = basket[i].lifeTime,
-					minY = basket[i].minY,
-					position = basket[i].position,
-					scale = go.get_scale(basket[i].id),
-					touchebal = false
-				})
+		local currentPos = vmath.vector3(action.x, action.y, 0)
 
-				basket[i]:delete()
+		if action.pressed then
+			predCursorPos = currentPos
+			predTime = os.clock()
+		elseif os.clock() ~= predTime then
+			local cursorSpeed = dist(predCursorPos, currentPos) / (os.clock() - predTime)
 
-				msg.post("#", "remove", { id = i })
+			if cursorSpeed > math.min(width, height) then
+				for i in pairs(basket) do											-- check all for touch
+					if basket[i].touchebal and basket[i]:isCuted(action, math.min(width, height)) then
+						msg.post("#", "cut", { object = basket[i], pos = currentPos })
+						basket[i]:delete()
+					end
+				end
 			end
 		end
+
+		predCursorPos = currentPos
+		predTime = os.clock()
 	end
 end

@@ -1,0 +1,23 @@
+go.property("hashName", hash("banana"))
+
+function init(self)
+	msg.post("#sprite", "play_animation", { id = self.hashName })
+	msg.post("#", "windowResized")													-- set good scale
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("windowResized") then
+		msg.post("@render:", "getScale", { sprite = go.get("#sprite", "size"), percent = 6 })
+	elseif message_id == hash("returnScale") then
+		go.set_scale(message.scale)
+	elseif message_id == hash("pop") then
+		msg.post("#sprite", "play_animation", { id = hash("cutPartc") })
+
+		go.animate(
+			"#sprite", "tint", go.PLAYBACK_ONCE_FORWARD, 
+			vmath.vector4(1, 1, 1, 0), go.EASING_LINEAR, 1, 1
+		)
+
+		timer.delay(2, false, function() go.delete() end)
+	end
+end

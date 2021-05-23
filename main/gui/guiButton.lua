@@ -1,6 +1,5 @@
-local node = require("main/gui/guiNode")
+local button = setmetatable({} ,{__index = require("main/gui/guiNode")})
 
-local button = node
 function button:new(name)
 	local currentNode = gui.get_node(name)
 	local fields = {
@@ -9,8 +8,8 @@ function button:new(name)
 		scale = gui.get_scale(currentNode),
 		pushed = false
 	}
-	self.__index = self
-	return setmetatable(fields, self)
+
+	return setmetatable(fields, { __index = button })
 end
 
 function button:push(funct)

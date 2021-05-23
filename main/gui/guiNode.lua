@@ -8,8 +8,8 @@ function node:new(name)
 		scale = gui.get_scale(currentNode),
 		pos = gui.get_position(currentNode)
 	}
-	self.__index = self
-	return setmetatable(fields, self)
+
+	return setmetatable(fields, { __index = node })
 end
 
 function node:setAlpha(alpha, duration)
@@ -17,12 +17,12 @@ function node:setAlpha(alpha, duration)
 	gui.animate(self.node, gui.PROP_COLOR, self.color, gui.EASING_LINEAR, duration or 1)
 end
 
-function node:fadein(duration)
+function node:fadein(duration)														-- show node
 	self:setAlpha(0, 0)
 	timer.delay(0.1, false, function() self:setAlpha(1, duration or 1) end)
 end
 
-function node:fadeout(duration)
+function node:fadeout(duration)														-- hide node
 	self:setAlpha(0, duration or 1)
 end
 
