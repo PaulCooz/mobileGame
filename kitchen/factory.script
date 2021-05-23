@@ -154,8 +154,7 @@ function update(self, dt)
 				addSomeObject()
 			else
 				currentQuantity = math.random(3, 5)
-				-- timeForSpawn = currentQuantity * 0.5
-				timeForSpawn = 0.5
+				timeForSpawn = currentQuantity * 0.5
 
 				quantityOfBombs = 0
 				pushHeart = false
